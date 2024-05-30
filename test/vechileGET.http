@@ -1,0 +1,7 @@
+
+
+GET http://localhost:4004/odata/v4/vechile-catalog/VechileInformation
+Content-Type: application/json
+Authorization: Basic UkFNQU5SRTpJbmRpYUAxMjM0
+x-csrf-token: Fetch
+

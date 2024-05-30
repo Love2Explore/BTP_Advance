@@ -3,6 +3,7 @@ ID: vechile_sidebyside
 version: 1.0.0
 description: "A simple CAP project."
 parameters:
+  appname: vechile_sidebyside
   enable-parallel-deployments: true
 build-parameters:
   before-all:
@@ -11,6 +12,27 @@ build-parameters:
         - npm ci
         - npx cds build --production
 modules:
+  - name: vechile_sidebyside-approuter
+    type: approuter.nodejs
+    path: approuter
+    requires:
+    - name: vechile_sidebyside-html_repo_host
+    - name: vechile_sidebyside-destination
+    - name: vechile_sidebyside-connectivity
+    - name: vechile_sidebyside-db
+    - name: vechile_sidebyside-logging
+    - name: vechile_sidebyside-auth
+    - name: srv-api
+      group: destinations
+      properties:
+        forwardAuthToken: true
+        name: srv-api
+        strictSSL: false
+        url: ${default-url}
+    parameters:
+      disk-quota: 256M
+      host: ${appname}-approuter
+      memory: 256M
   - name: vechile_sidebyside-srv
     type: nodejs
     path: gen/srv
@@ -26,69 +48,51 @@ modules:
           srv-url: ${default-url}
     requires:
       - name: vechile_sidebyside-auth
-      - name: vechile_sidebyside-db
-      - name: vechile_sidebyside-messaging
       - name: vechile_sidebyside-logging
-
-  - name: vechile_sidebyside-mtx
-    type: nodejs
-    path: gen/mtx/sidecar
-    build-parameters:
-      builder: npm-ci
-    parameters:
-      memory: 256M
-      disk-quota: 512M
-    provides:
-      - name: mtx-api
-        properties:
-          mtx-url: ${default-url}
-
-  - name: vechile_sidebyside-db-deployer
+      - name: vechile_sidebyside-destination
+      - name: vechile_sidebyside-connectivity
+      - name: vechile_sidebyside-db
+  - name:  vechile_sidebyside-deployer
     type: hdb
     path: gen/db
-    parameters:
-      buildpack: nodejs_buildpack
     requires:
-      - name: vechile_sidebyside-db
-
-  - name: vechile_sidebyside
-    type: approuter.nodejs
-    path: app/router
-    parameters:
-      keep-existing-routes: true
-      disk-quota: 256M
-      memory: 256M
+    - name: vechile_sidebyside-db
+      properties:
+        TARGET_CONTAINER: ~{hdi-container-name}
+  - name: vechile_sidebyside-ui-deployer
+    type: com.sap.application.content
+    path: .
     requires:
-      - name: srv-api
-        group: destinations
-        properties:
-          name: srv-api # must be used in xs-app.json as well
-          url: ~{srv-url}
-          forwardAuthToken: true
-      - name: vechile_sidebyside-auth
-      - name: vechile_sidebyside-logging
-
+    - name: vechile_sidebyside-html_repo_host
+      parameters:
+        content-target: true
+    build-parameters:
+      build-result: resources
+      requires:
+      - artifacts:
+        - vechile.zip
+        name: vechile
+        target-path: resources/
+  - name: vechile
+    type: html5
+    path: app/vechile-app
+    build-parameters:
+      builder: custom
+      commands:
+      - npm install
+      - npm run build
+      supported-platforms: []
 resources:
-  - name: vechile_sidebyside-registry
+  - name: vechile_sidebyside-html_repo_host
     type: org.cloudfoundry.managed-service
-    requires:
-      - name: mtx-api
     parameters:
-      service: saas-registry
-      service-plan: application
-      config:
-        xsappname: vechile_sidebyside-${org}-${space}
-        appName: vechile_sidebyside-${org}-${space}
-        displayName: vechile_sidebyside
-        description: A simple CAP project.
-        category: 'Category'
-        appUrls:
-          getDependencies: ~{mtx-api/mtx-url}/-/cds/saas-provisioning/dependencies
-          onSubscription: ~{mtx-api/mtx-url}/-/cds/saas-provisioning/tenant/{tenantId}
-          onSubscriptionAsync: true
-          onUnSubscriptionAsync: true
-          onUpdateDependenciesAsync: true
-          callbackTimeoutMillis: 300000 # Increase if your deployments are taking longer than that
+      service: html5-apps-repo
+      service-plan: app-host
+  - name: vechile_sidebyside-connectivity
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: connectivity
+      service-plan: lite
   - name: vechile_sidebyside-auth
     type: org.cloudfoundry.managed-service
     parameters:
@@ -98,19 +102,30 @@ resources:
       config:
         xsappname: vechile_sidebyside-${org}-${space}
         tenant-mode: dedicated
-  - name: vechile_sidebyside-db
-    type: com.sap.xs.hdi-container
-    parameters:
-      service: hana
-      service-plan: hdi-shared
-  - name: vechile_sidebyside-messaging
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: enterprise-messaging
-      service-plan: default
-      path: ./event-mesh.json
+  # - name: vechile_sidebyside-messaging
+  #   type: org.cloudfoundry.managed-service
+  #   parameters:
+  #     service: enterprise-messaging
+  #     service-plan: default
+  #     path: ./event-mesh.json
   - name: vechile_sidebyside-logging
     type: org.cloudfoundry.managed-service
     parameters:
       service: application-logs
-      service-plan: standard
+      service-plan: lite
+  - name: vechile_sidebyside-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+  - name: vechile_sidebyside-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      config:
+        makeUniqueName: false
+        schema: VECHILE_DB
+      service: hana
+      service-name: vechile_sidebyside-db
+      service-plan: hdi-shared
+    properties:
+      hdi-container-name: ${service-name}

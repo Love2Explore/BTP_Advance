@@ -1,0 +1,20 @@
+
+
+POST http://localhost:4004/odata/v4/vechile-catalog/VechileInformation
+Content-Type: application/json
+Authorization: Basic UkFNQU5SRTpJbmRpYUAxMjM0
+x-csrf-token: 3J9gVE6GcHq6Dq1uwjOARw==
+
+{
+            
+            "VechileVariantId": "838d454a-33b3-1eee-a6cb-c98adbad2494",
+            "VechilePlateNumber": "MP09090",
+            "VechileWheelCount": "5",
+            "Manufacturar": "TA",
+            "DateOfPurchase": "2023-12-06",
+            "RegistrationDate": "2023-12-22",
+            "OwnerName": "TEST",
+            "VariantName": "",
+            "gear_type": "8",
+            "Colour": "Blue"
+}

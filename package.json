@@ -9,9 +9,11 @@
     "@sap-cloud-sdk/http-client": "^3.15.0",
     "@sap-cloud-sdk/resilience": "^3.15.0",
     "@sap/cds": "^7",
-    "@sap/cds-hana": "^2",
-    "@sap/cds-mtxs": "^1.9",
+    "@sap/hana-client": "^2.15.17",
+    "@sap/cds-odata-v2-adapter-proxy": "^1.9.21",
     "@sap/xssec": "^3",
+    "cds-swagger-ui-express": "^0.8.0",
+    "cors": "^2.8.5",
     "express": "^4"
   },
   "devDependencies": {
@@ -24,9 +26,7 @@
     "start": "cds-serve"
   },
   "cds": {
-    "profile": "with-mtx-sidecar",
     "requires": {
-      "multitenancy": true,
       "db": "hana",
       "messaging": {
         "kind": "enterprise-messaging"
@@ -34,9 +34,21 @@
       "vechile": {
         "kind": "odata-v2",
         "model": "srv/external/vechile",
+        "csrf": true,
+        "csrfInBatch": true,
         "credentials": {
           "destination": "ERXCLNT001",
           "path": "/sap/opu/odata/sap/UI_VECHILE_INFO_RT"
+        }
+      },
+      "wcm": {
+        "kind": "odata",
+        "model": "srv/external/wcm",
+        "csrf": true,
+        "csrfInBatch": true,
+        "credentials": {
+          "destination": "ERXCLNT001",
+          "path": "/sap/opu/odata4/sap/testsbv4/srvd/sap/testsd/0001"
         }
       }
     }

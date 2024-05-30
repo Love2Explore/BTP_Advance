@@ -1,0 +1,41 @@
+{
+    "authenticationMethod": "route",
+    "welcomeFile":"/index.html",
+    "routes": [
+      {
+        "source": "^/odata/v4/(.*)$",
+        "target": "/odata/v4/$1",
+        "destination": "ERXCLNT001",
+        "authenticationType": "xsuaa",
+        "csrfProtection": false
+      },
+      {
+        "source": "^/vechilecatalog/(.*)$",
+        "target": "$1",
+        "destination": "srv-api",
+        "authenticationType": "xsuaa",
+        "csrfProtection": false,
+        "cacheControl": "no-cache, no-store, must-revalidate"
+      },
+      {
+        "source": "^/vechile-catalog/(.*)$",
+          "target": "$1",
+         "destination": "srv-api",
+         "authenticationType": "xsuaa",
+         "csrfProtection": false,
+         "cacheControl": "no-cache, no-store, must-revalidate"
+      },
+      {
+        "source": "^/resources/(.*)$",
+        "target": "/resources/$1",
+        "authenticationType": "none",
+        "destination": "ui5"
+      },
+      {
+        "source": "^/test-resources/(.*)$",
+        "target": "/test-resources/$1",
+        "authenticationType": "none",
+        "destination": "ui5"
+      }
+    ]
+  }

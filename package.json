@@ -9,12 +9,18 @@
     "@sap-cloud-sdk/http-client": "^3.15.0",
     "@sap-cloud-sdk/resilience": "^3.15.0",
     "@sap/cds": "^7",
-    "@sap/hana-client": "^2.15.17",
     "@sap/cds-odata-v2-adapter-proxy": "^1.9.21",
+    "@sap/hana-client": "^2.15.17",
+    "@sap/xsenv": "^5.1.0",
     "@sap/xssec": "^3",
+    "axios": "^1.7.2",
+    "basic-tools": "^1.0.8",
     "cds-swagger-ui-express": "^0.8.0",
+    "cfenv": "^1.2.4",
     "cors": "^2.8.5",
-    "express": "^4"
+    "express": "^4",
+    "jwt-decode": "^4.0.0",
+    "passport": "^0.7.0"
   },
   "devDependencies": {
     "@cap-js/sqlite": "^1",
@@ -23,11 +29,57 @@
     "eslint": "^9"
   },
   "scripts": {
-    "start": "cds-serve"
+    "start": "cds run",
+    "build": "cds build/all --clean",
+    "watch-health": "cds watch --open health/webapp/index.html?sap-ui-xx-viewCache=false",
+    "watch-load": "cds watch --open load/webapp/index.html?sap-ui-xx-viewCache=false",
+    "watch-forecast": "cds watch --open forecast/webapp/index.html?sap-ui-xx-viewCache=false",
+    "undeploy": "cf undeploy ahm-pu --delete-services --delete-service-keys"
+  },
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "env": {
+      "es2020": true,
+      "node": true,
+      "jest": true,
+      "mocha": true
+    },
+    "globals": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true,
+      "DELETE": true,
+      "CREATE": true,
+      "DROP": true,
+      "CDL": true,
+      "CQL": true,
+      "CXL": true,
+      "cds": true
+    },
+    "rules": {
+      "no-console": "off",
+      "require-atomic-updates": "off"
+    }
   },
   "cds": {
     "requires": {
-      "db": "hana",
+      "db": {
+        "kind": "hana",
+        "model": [
+          "db",
+          "srv"
+        ]
+      },
+      "uaa": {
+        "kind": "xsuaa",
+        "credentials": {}
+      },
+      "auth": {
+        "passport": {
+          "strategy": "JWT"
+        },
+        "kind": "jwt-auth"
+      },
       "messaging": {
         "kind": "enterprise-messaging"
       },
@@ -42,7 +94,7 @@
         }
       },
       "wcm": {
-        "kind": "odata",
+        "kind": "odata-v2",
         "model": "srv/external/wcm",
         "csrf": true,
         "csrfInBatch": true,
@@ -51,6 +103,9 @@
           "path": "/sap/opu/odata4/sap/testsbv4/srvd/sap/testsd/0001"
         }
       }
+    },
+    "hana": {
+      "deploy-format": "hdbtable"
     }
   }
 }

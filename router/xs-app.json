@@ -1,6 +1,6 @@
 {
-  "welcomeFile": "/index.html",
-  "authenticationMethod": "route",
+  "welcomeFile": "/vechileui/index.html",
+  "authenticationMethod": "none",
   "logout": {
     "logoutEndpoint": "/app-logout",
     "logoutPage": "/"
@@ -38,10 +38,11 @@
       "csrfProtection": false,
       "cacheControl": "no-cache, no-store, must-revalidate"
     },
+    {"source":"^/vechileui/(.*)$","target":"$1","localDir":"../app/vechile-app/src","cacheControl":"no-cache, no-store, must-revalidate"},
     {
-      "source": "^(.*)$",
-      "target": "$1",
-      "service":"html5-apps-repo-rt",
+      "source": "^/(.*)$", 
+      "destination": "srv-api",
+      "csrfProtection": true,
       "authenticationType":"xsuaa"
     }
   ]

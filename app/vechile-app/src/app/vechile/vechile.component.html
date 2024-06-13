@@ -1,1 +1,38 @@
-<p>vechile works!</p>
+<div class="alert alert-success" *ngIf="message">{{message}}</div>
+<div class="container">
+   <table class="table">
+        <caption>List of Vechiles</caption>
+        <thead>
+            <tr>
+                <th>VechileId</th>
+                <td>Plate Number</td>
+                <td>Wheel Count</td>
+                <td>Manufacturar</td>
+                <td>Completion Date</td>
+                <td>DateOfPurchase</td>
+                <td>Registration Date</td>
+                <td>OwnerName</td>
+                <td>Variant Name</td>
+                <td>Gear Type</td>
+                <td>Colour</td>
+                <td>Vechile Chassis</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let t of Vechiles">
+                <td>{{t.VechileId}}</td>
+                <td>{{t.VechilePlateNumber}}</td>
+                <td>{{t.VechileWheelCount}}</td>
+                <td>{{t.Manufacturar }}</td>
+                <td>{{t.DateOfPurchase }}</td>
+                <td>{{t.RegistrationDate}}</td>
+                <td>{{t.OwnerName }}</td>
+                <td>{{t.VariantName }}</td>
+                <td>{{t.gear_type }}</td>
+                <td>{{t.Colour }}</td>
+                <td>{{t.vechile_chassis }}</td>
+                <td><button class="btn btn-warning" (click)="deletedTodo(t.id)">Delete</button></td>
+            </tr>
+        </tbody>
+    </table>
+</div>

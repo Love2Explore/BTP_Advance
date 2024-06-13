@@ -3,7 +3,6 @@ ID: vechile_sidebyside
 version: 1.0.0
 description: "A simple CAP project."
 parameters:
-  appname: vechile_sidebyside
   enable-parallel-deployments: true
 build-parameters:
   before-all:
@@ -14,25 +13,22 @@ build-parameters:
 modules:
   - name: vechile_sidebyside-approuter
     type: approuter.nodejs
-    path: approuter
-    requires:
-    - name: vechile_sidebyside-html_repo_host
-    - name: vechile_sidebyside-destination
-    - name: vechile_sidebyside-connectivity
-    - name: vechile_sidebyside-db
-    - name: vechile_sidebyside-logging
-    - name: vechile_sidebyside-auth
-    - name: srv-api
-      group: destinations
-      properties:
-        forwardAuthToken: true
-        name: srv-api
-        strictSSL: false
-        url: ${default-url}
+    path: router/
     parameters:
+      keep-existing-routes: true
       disk-quota: 256M
-      host: ${appname}-approuter
       memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: vechile_sidebyside-auth
+      - name: vechile_sidebyside-destination
+      - name: vechile_sidebyside-connectivity
+      - name: vechile_sidebyside_html_repo_runtime
   - name: vechile_sidebyside-srv
     type: nodejs
     path: gen/srv
@@ -47,23 +43,56 @@ modules:
         properties:
           srv-url: ${default-url}
     requires:
-      - name: vechile_sidebyside-auth
-      - name: vechile_sidebyside-logging
       - name: vechile_sidebyside-destination
-      - name: vechile_sidebyside-connectivity
+      # - name: vechile_sidebyside-messaging
       - name: vechile_sidebyside-db
-  - name:  vechile_sidebyside-deployer
+      - name: vechile_sidebyside-auth
+      - name: vechile_sidebyside-connectivity
+      - name: vechile_sidebyside-logging
+  - name: vechile_sidebyside-db-deployer
     type: hdb
     path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
     requires:
     - name: vechile_sidebyside-db
       properties:
         TARGET_CONTAINER: ~{hdi-container-name}
-  - name: vechile_sidebyside-ui-deployer
+  - name: vechile_sidebyside-destination-content
+    type: com.sap.application.content
+    requires:
+    - name: vechile_sidebyside-destination
+      parameters:
+        content-target: true
+    - name: vechile_sidebyside_html_repo_host
+      parameters:
+        service-key:
+          name: vechile_sidebyside_html_repo_host-key
+    - name: vechile_sidebyside-auth
+      parameters:
+        service-key:
+          name: vechile_sidebyside-auth-key
+    parameters:
+      content:
+        instance:
+          destinations:
+          - Name: vechile_sidebyside_html_repo_host
+            ServiceInstanceName: vechile_sidebyside_html_repo_host
+            ServiceKeyName: vechile_sidebyside_html_repo_host-key
+            sap.cloud.service: sapuiservice.cloud
+          - Authentication: OAuth2UserTokenExchange
+            Name: vechile_sidebyside-auth
+            ServiceInstanceName: vechile_sidebyside-auth
+            ServiceKeyName: vechile_sidebyside-auth-key
+            sap.cloud.service: sapuiservice.cloud
+          existing_destinations_policy: ignore
+    build-parameters:
+      no-source: true
+  - name: vechile_sidebyside_ui_deployer
     type: com.sap.application.content
     path: .
     requires:
-    - name: vechile_sidebyside-html_repo_host
+    - name: vechile_sidebyside_html_repo_host
       parameters:
         content-target: true
     build-parameters:
@@ -82,42 +111,27 @@ modules:
       - npm install
       - npm run build
       supported-platforms: []
+
 resources:
-  - name: vechile_sidebyside-html_repo_host
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: html5-apps-repo
-      service-plan: app-host
   - name: vechile_sidebyside-connectivity
     type: org.cloudfoundry.managed-service
     parameters:
       service: connectivity
       service-plan: lite
-  - name: vechile_sidebyside-auth
+  - name: vechile_sidebyside-destination
     type: org.cloudfoundry.managed-service
     parameters:
-      service: xsuaa
-      service-plan: application
-      path: ./xs-security.json
       config:
-        xsappname: vechile_sidebyside-${org}-${space}
-        tenant-mode: dedicated
+        HTML5Runtime_enabled: true
+        version: 1.0.0
+      service: destination
+      service-plan: lite
   # - name: vechile_sidebyside-messaging
   #   type: org.cloudfoundry.managed-service
   #   parameters:
   #     service: enterprise-messaging
   #     service-plan: default
   #     path: ./event-mesh.json
-  - name: vechile_sidebyside-logging
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: application-logs
-      service-plan: lite
-  - name: vechile_sidebyside-destination
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: destination
-      service-plan: lite
   - name: vechile_sidebyside-db
     type: com.sap.xs.hdi-container
     parameters:
@@ -129,3 +143,28 @@ resources:
       service-plan: hdi-shared
     properties:
       hdi-container-name: ${service-name}
+  - name: vechile_sidebyside-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: vechile_sidebyside
+        tenant-mode: dedicated
+  - name: vechile_sidebyside-logging
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: application-logs
+      service-plan: lite
+  - name: vechile_sidebyside_html_repo_host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+  - name: vechile_sidebyside_html_repo_runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime
+
